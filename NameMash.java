@@ -7,30 +7,42 @@ import java.util.*;
 
 public class NameMash {
 
-	//import dictionary of acceptable suggestion names (common surnames and English words)
-	/*
-	public Suggestion(String newName){
-		//class that contains the value of each suggested combined name and the score, based on the two input names
-		public String name = newName;
-		public int score = 0;
-
-		//increase score for each shared letter
-		
-		//decrease score for the difference in non-shared letters
+	//Settings
+	//int sharedBonus = 2;      //bonus granted to a suggested name for using a shared letter
+	//int unsharedPenalty = -1; //penalty assigned to a suggested name for using a letter only belonging to one name
+	
+	//Is String A a subset of String B?
+	static boolean isSubset (String A, String B){
+		A = A.toLowerCase();
+		B = B.toLowerCase();
+		boolean check = true;
+		for (int i=0; i<A.length(); i++ ){
+			char ltr = A.charAt(i);
+			String letter = "" + ltr;
+			//if B doesn't contain the letter, return false
+			//if B does contain the letter, remove the letter from B to avoid double-using the same letter
+			if (B.contains(letter)){
+				B = B.replaceFirst(letter,"");
+			} else {check = false;}
+		}
+		return check;
 	}
-*/
+
 	public static void main(String[] args) {
+		int sharedBonus = 2;
+		int unsharedPenalty = -1;
+
 		//provide context
 		System.out.println("This program will provide a ranking of combination names, based on the two input names below.");
 
 		//prompt user to input both names
-		Scanner myObj = new Scanner(System.in);
+		Scanner textPrompt = new Scanner(System.in);
 
 		System.out.print("Surname 1: ");
-		String name1 = myObj.nextLine();
+		String name1 = textPrompt.nextLine();
 
 		System.out.print("Surname 2: ");
-		String name2 = myObj.nextLine();
+		String name2 = textPrompt.nextLine();
 		//I know repeating code (except for numerical increment) isn't best practice. Oh well.
 
 		System.out.println(name1+" and "+name2+", please wait while recommendations are generated.");
@@ -56,20 +68,49 @@ public class NameMash {
 			}
 		}
 
-		//testing the above logic
-		/*
-		System.out.println("Name 1:      "+name1);
-		System.out.println("Name 2:      "+name2);
-		System.out.println("Overlap:     "+overlap);
-		System.out.println("Remainder 1: "+name1Remainder);
-		System.out.println("Remainder 2: "+name2Remainder);
-		*/
+		String unshared = name1Remainder.concat(name2Remainder);
 
-		//remove all words from dictionary that cannot be created by the two names combined
+		//create dictionary of valid options
+		ArrayList<String> suggestions = new ArrayList<>();
+		int score;
+		int maxScore = 0;
 
-		//create a Suggestion object for all remaining names in the dictionary
+		try {
+			File myObj = new File("English.txt");
+			Scanner myReader = new Scanner(myObj);
+			while (myReader.hasNextLine()) {
+				String data = myReader.nextLine();
+				//check if 'data' has any letters that 'comboName' doesn't have
+				if (isSubset(data,comboName)){
+					score = 0;
+					//increase score by 'sharedBonus' for each shared letter
+					//decrease score by 'unsharedPenalty' for each non-overlapping letter
+					for (int i=0; i<data.length(); i++){
+						char ltr = data.charAt(i);
+						String letter = ""+ltr;
+						if (overlap.contains(letter)){
+							score += sharedBonus;
+						} else {score += unsharedPenalty;}
+					}
+					if (score > maxScore) {
+						maxScore = score;
+						suggestions.clear();
+						suggestions.add(data);
+					} else if (score == maxScore) {
+						//add suggested name to the list
+						suggestions.add(data);
+					} //otherwise, no change is made to maxScore or suggestions
+				}
+			}
+			myReader.close();
+		} catch (FileNotFoundException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
 		
-		//display results, ranked: all possible results if less than N, or top N results by score
+		//display best results
+		//future improvement: display all possible results if less than N, or top N results by score
+		System.out.println(suggestions);
 
 	}
 }
